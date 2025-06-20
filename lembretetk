@@ -1,0 +1,83 @@
+import datetime
+import tkinter as tk
+from tkinter import messagebox
+
+def calcular_dias_restantes_e_fim_estoque(quantidade, uso_diario):
+    dias_restantes = quantidade // uso_diario
+    hoje = datetime.date.today()
+    data_fim_estoque = hoje + datetime.timedelta(days=dias_restantes)
+    return dias_restantes, data_fim_estoque
+
+def verificar_vencimento(data_vencimento):
+    hoje = datetime.date.today()
+    dias_vencimento = (data_vencimento - hoje).days
+    if dias_vencimento <= 7:
+        return f"Atenção: Sua receita vence em {dias_vencimento} dia(s)! Revalide com seu médico."
+    else:
+        return f"Receita válida por mais {dias_vencimento} dia(s)."
+
+def adicionar_medicamento():
+    try:
+        nome = entry_nome.get()
+        quantidade = int(entry_quantidade.get())
+        uso_diario = int(entry_uso_diario.get())
+        data_venc_input = entry_data_venc.get()
+        data_vencimento = datetime.datetime.strptime(data_venc_input, "%d-%m-%Y").date()
+
+        dias_restantes, data_fim_estoque = calcular_dias_restantes_e_fim_estoque(quantidade, uso_diario)
+        vencimento_msg = verificar_vencimento(data_vencimento)
+
+        resultado = f"\nMedicamento: {nome}\n"
+        resultado += f"- Estoque: {quantidade} comprimido(s)\n"
+        resultado += f"- Uso diário: {uso_diario} comprimido(s)\n"
+        resultado += f"- Dura por mais {dias_restantes} dia(s)\n"
+        resultado += f"- Fim estimado do estoque: {data_fim_estoque.strftime('%d/%m/%Y')}\n"
+        resultado += f"{vencimento_msg}\n"
+
+        if dias_restantes <= 5:
+            resultado += "Alerta: Estoque baixo. Reabasteça em breve!\n"
+
+        resultado += "Lembretes diários:\n"
+        for dia in range(1, dias_restantes + 1):
+            resultado += f"  Dia {dia}: Tomar {uso_diario} comprimido(s) de '{nome}'.\n"
+
+        text_resultado.insert(tk.END, resultado + "\n" + "-"*40 + "\n")
+
+        # Limpa os campos
+        entry_nome.delete(0, tk.END)
+        entry_quantidade.delete(0, tk.END)
+        entry_uso_diario.delete(0, tk.END)
+        entry_data_venc.delete(0, tk.END)
+
+    except ValueError:
+        messagebox.showerror("Erro", "Por favor, preencha os campos corretamente.\nFormato da data: DD-MM-AAAA")
+
+# === Interface Gráfica ===
+janela = tk.Tk()
+janela.title("Controle de Medicamentos")
+janela.geometry("500x600")
+
+# Campos de entrada
+tk.Label(janela, text="Nome do Medicamento:").pack()
+entry_nome = tk.Entry(janela, width=40)
+entry_nome.pack()
+
+tk.Label(janela, text="Quantidade de Comprimidos:").pack()
+entry_quantidade = tk.Entry(janela, width=40)
+entry_quantidade.pack()
+
+tk.Label(janela, text="Uso Diário (comprimidos por dia):").pack()
+entry_uso_diario = tk.Entry(janela, width=40)
+entry_uso_diario.pack()
+
+tk.Label(janela, text="Data de Vencimento da Receita (DD-MM-AAAA):").pack()
+entry_data_venc = tk.Entry(janela, width=40)
+entry_data_venc.pack()
+
+tk.Button(janela, text="Adicionar Medicamento", command=adicionar_medicamento).pack(pady=10)
+
+# Área de resultado
+text_resultado = tk.Text(janela, height=20, width=60)
+text_resultado.pack()
+
+janela.mainloop()
