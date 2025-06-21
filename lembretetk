@@ -2,6 +2,8 @@ import datetime
 import tkinter as tk
 from tkinter import messagebox
 
+medicamentos = []
+
 def calcular_dias_restantes_e_fim_estoque(quantidade, uso_diario):
     dias_restantes = quantidade // uso_diario
     hoje = datetime.date.today()
@@ -27,23 +29,19 @@ def adicionar_medicamento():
         dias_restantes, data_fim_estoque = calcular_dias_restantes_e_fim_estoque(quantidade, uso_diario)
         vencimento_msg = verificar_vencimento(data_vencimento)
 
-        resultado = f"\nMedicamento: {nome}\n"
-        resultado += f"- Estoque: {quantidade} comprimido(s)\n"
-        resultado += f"- Uso diário: {uso_diario} comprimido(s)\n"
-        resultado += f"- Dura por mais {dias_restantes} dia(s)\n"
-        resultado += f"- Fim estimado do estoque: {data_fim_estoque.strftime('%d/%m/%Y')}\n"
-        resultado += f"{vencimento_msg}\n"
+        medicamento = {
+            "nome": nome,
+            "quantidade": quantidade,
+            "uso_diario": uso_diario,
+            "data_vencimento": data_vencimento,
+            "dias_restantes": dias_restantes,
+            "data_fim_estoque": data_fim_estoque,
+            "vencimento_msg": vencimento_msg
+        }
+        medicamentos.append(medicamento)
 
-        if dias_restantes <= 5:
-            resultado += "Alerta: Estoque baixo. Reabasteça em breve!\n"
+        mostrar_medicamentos()
 
-        resultado += "Lembretes diários:\n"
-        for dia in range(1, dias_restantes + 1):
-            resultado += f"  Dia {dia}: Tomar {uso_diario} comprimido(s) de '{nome}'.\n"
-
-        text_resultado.insert(tk.END, resultado + "\n" + "-"*40 + "\n")
-
-        # Limpa os campos
         entry_nome.delete(0, tk.END)
         entry_quantidade.delete(0, tk.END)
         entry_uso_diario.delete(0, tk.END)
@@ -52,12 +50,30 @@ def adicionar_medicamento():
     except ValueError:
         messagebox.showerror("Erro", "Por favor, preencha os campos corretamente.\nFormato da data: DD-MM-AAAA")
 
-# === Interface Gráfica ===
+def mostrar_medicamentos():
+    text_resultado.delete(1.0, tk.END)
+    for idx, med in enumerate(medicamentos, 1):
+        resultado = f"\n[{idx}] Medicamento: {med['nome']}\n"
+        resultado += f"- Estoque: {med['quantidade']} comprimido(s)\n"
+        resultado += f"- Uso diário: {med['uso_diario']} comprimido(s)\n"
+        resultado += f"- Dura por mais {med['dias_restantes']} dia(s)\n"
+        resultado += f"- Fim estimado do estoque: {med['data_fim_estoque'].strftime('%d/%m/%Y')}\n"
+        resultado += f"{med['vencimento_msg']}\n"
+
+        if med['dias_restantes'] <= 5:
+            resultado += "Alerta: Estoque baixo. Reabasteça em breve!\n"
+
+        resultado += "Lembretes diários:\n"
+        for dia in range(1, med['dias_restantes'] + 1):
+            resultado += f"  Dia {dia}: Tomar {med['uso_diario']} comprimido(s) de '{med['nome']}'.\n"
+
+        resultado += "-" * 40 + "\n"
+        text_resultado.insert(tk.END, resultado)
+
 janela = tk.Tk()
 janela.title("Controle de Medicamentos")
-janela.geometry("500x600")
+janela.geometry("550x650")
 
-# Campos de entrada
 tk.Label(janela, text="Nome do Medicamento:").pack()
 entry_nome = tk.Entry(janela, width=40)
 entry_nome.pack()
@@ -76,8 +92,7 @@ entry_data_venc.pack()
 
 tk.Button(janela, text="Adicionar Medicamento", command=adicionar_medicamento).pack(pady=10)
 
-# Área de resultado
-text_resultado = tk.Text(janela, height=20, width=60)
+text_resultado = tk.Text(janela, height=25, width=70)
 text_resultado.pack()
 
 janela.mainloop()
